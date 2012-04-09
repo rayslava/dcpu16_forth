@@ -16,7 +16,6 @@ define(`call', ` ADD [return_stack_top], 4
  SET X, [return_stack_top]
  jsr $1')
 
-
 define(`next', ` SET X, [return_stack_top]
  SET PUSH, [X]
  SUB [return_stack_top], 4

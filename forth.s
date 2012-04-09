@@ -27,18 +27,10 @@ jmp start
 	mov [return_stack_top], 0x3000 ; init return sp
 	mov [dictionary_end], upstr ; last word on boot
 
-	mov push, cmd1
-	callword(searchForWord)
-
-	mov a, pop
-	mov b, rot
-	push 1
-	push 2
-	push 3
-	call(a)
+	push 8
+	push 8
+	callword(multiply)
 	pop a
-	pop b
-	pop c
 
 	jmp exit
 
@@ -208,6 +200,34 @@ defword(upstr, 0, upstr)
 
 	:__upstr_exit
 	set push, z
+next
+
+defword(+, 0, plus)
+	pop a
+	pop b
+	add a,b
+	push a
+next
+
+defword(-, 0, minus)
+	pop b
+	pop a
+	sub a,b
+	push a
+next
+
+defword(*, 0, multiply)
+	pop b
+	pop a
+	mul a,b
+	push a
+next
+
+defword(/, 0, divide)
+	pop b
+	pop a
+	div a,b
+	push a
 next
 
 
