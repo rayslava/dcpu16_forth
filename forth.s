@@ -23,7 +23,7 @@ jmp start
 	:ok_msg
 		dat "Ok",0
 	:program
-		dat "3 4 25 + +",0
+		dat "256 128 64 + +",0
 	:test1
 		dat "65534",0
 
@@ -38,20 +38,8 @@ jmp start
 	mov b,a
 	mov c,a
 
-	push test1
-	callword(strtoint)
-	mov a,0
-	mov a,0
-	mov a,0
-	mov a,0
-	mov a,0
-	mov a,0
-	mov a,0
-	mov a,0
-	mov a,0
-	pop a
-	mov b,a
-	mov c,a
+	push program
+	callword(parse)
 
 	jmp exit
 
@@ -59,6 +47,8 @@ defword(parse, 0, parse)
 	jmp parse_begin
 
 	:string_to_parse
+		dat 0
+	:current_pos
 		dat 0
 	:current_word
 		dat 0
@@ -69,31 +59,54 @@ defword(parse, 0, parse)
 		mov i, 0
 		mov [memory], 0x1800		; buffer
 
+		
 		mov x, [string_to_parse]
 		mov a, [current_word]
+		jmp parse_add_symbol
+
+		:parse_next_token			; init buffer
+			mov a, [current_word]
+
+			mov x, [string_to_parse]
+			mov b, [current_pos]
+			add x, [b]
 
 		:parse_add_symbol
 			mov	[a], [x]
 			add x, 1
 			add a, 1
+
+			ife [x],0				; TEH END
+			jmp parse_exit
+			ife [x],0x0A
+			jmp parse_exit
+			ife [x],0x0D
+			jmp parse_exit
+
 			ifn [x],0x20			; IF NOT SPACE
 			jmp parse_add_symbol
 
+			add x, 1
+			mov [current_pos], x	; WORKOUT
 			mov [a], 0
 			push [current_word]
 			callword(isnumber)
 			ife	1, pop				; that's NUMBER
 			jmp parse_num
 
-			push [current_word]
-			callword(strlen)
-			mov j,pop
-			mov c,i
+			;push [current_word]
+			;callword(strlen)
+			;mov j, pop
+			;mov c,i
 			
 		:parse_num
-			push [current_word]			
+			mov a, [current_word]
+			push [current_word]
+			callword(strtoint)		; digit is on stack
+			pop j
+			jmp parse_next_token
 
-
+		:parse_exit
 next
 
 defword(searchForWord, 0, searchForWord) ; ( n -- addr ) searches word in dictionary by name 
@@ -252,13 +265,11 @@ defword(strtoint, 0, strtoint) ; ( num str -- str )
 
 	:strtoint_start
 		mov [strtoint_string], pop
-		mov [strtoint_digit], pop
 
 		push [strtoint_string]
 		callword(strlen)
 		mov z, pop
 		sub z, 1
-
 
 		mov a, [strtoint_string]
 		add a, z
