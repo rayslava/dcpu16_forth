@@ -1,6 +1,7 @@
 define(`prev_word', `0')
 
 define(`defword', `:$3
+  SET PC, __$3_start
   DAT ifelse(`prev_word', `0', `0,0,0,0' , `prev_word') ; Link to previous
   DAT "upcase($1)", 0 ; Name
   DAT $2 ; Flags
@@ -10,6 +11,11 @@ define(`defword', `:$3
 define(`callword', ` ADD [return_stack_top], 4
  SET X, [return_stack_top]
  jsr __$1_start')
+
+define(`call', ` ADD [return_stack_top], 4
+ SET X, [return_stack_top]
+ jsr $1')
+
 
 define(`next', ` SET X, [return_stack_top]
  SET PUSH, [X]

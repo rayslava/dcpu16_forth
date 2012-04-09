@@ -9,9 +9,9 @@ jmp start
 		dat return_stack_top
 
 	:cmd1
-		dat "dup"
+		dat "rot",0
 	:cmd2
-		dat "rot"
+		dat "strlen",0
 
 ; data section here
 	:initial_stack 			
@@ -27,12 +27,22 @@ jmp start
 	mov [return_stack_top], 0x3000 ; init return sp
 	mov [dictionary_end], upstr ; last word on boot
 
-	mov push, cmd2
+	mov push, cmd1
 	callword(searchForWord)
+
+	mov a, pop
+	mov b, rot
+	push 1
+	push 2
+	push 3
+	call(a)
+	pop a
+	pop b
+	pop c
 
 	jmp exit
 
-defword(searchForWord, 0, searchForWord)
+defword(searchForWord, 0, searchForWord) ; ( n -- addr ) searches word in dictionary by name 
 	mov [sfw_local_name_str], pop
 	jmp sfw_begin
 
@@ -44,22 +54,49 @@ defword(searchForWord, 0, searchForWord)
 		dat 0,0,0,0
 	
 	:sfw_begin
-		mov [sfw_local_current_addr], [rot]
-		add [sfw_local_current_addr], 1 ; Last word name
+		mov [sfw_local_current_addr], [dictionary_end]
 
 		mov push, [sfw_local_name_str]
 		callword(upstr)
-		mov a,b
-		mov b,a
 		callword(strlen)
-		mov [sfw_local_name_len], pop			; X = name_length
+		mov [sfw_local_name_len], pop					; name_length
+		
+		:sfw_mainloop
+			mov b, [sfw_local_current_addr]
+			add b, 3
+			push b
 
-;		:sfw_mainloop
-;			mov b, [sfw_local_current_addr]
-;			callword(strcmp)
-;			mov J, pop
+			callword(strlen)
+			mov a, pop
 
-next
+			ifn [sfw_local_name_len], a
+			jmp nextword
+			push [sfw_local_name_str]
+			push b
+			callword(strcmp)
+			ife [sfw_local_name_len],pop
+			jmp sfw_found
+
+		:nextword
+			mov b, [sfw_local_current_addr]		; Load current name
+			add b, 3
+
+			ife [b], 0							; 0 - dictionary start
+			jmp sfw_not_found					; exit
+
+			sub b, 1							; switch to link
+			mov [sfw_local_current_addr], [b]	; load previous link
+			jmp sfw_mainloop
+
+		:sfw_found
+			mov a, [sfw_local_current_addr]
+			push a
+			jmp sfw_exit
+		:sfw_not_found
+			push 0
+		:sfw_exit
+
+	next
 
 defword(dup, 0, dup)
 	set a, pop
