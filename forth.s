@@ -22,6 +22,10 @@ jmp start
 		dat "0000000",0
 	:ok_msg
 		dat "Ok",0
+	:program
+		dat "3 4 25 + +",0
+	:test1
+		dat "65534",0
 
 :start
 	mov [return_stack_top], 0x3000 ; init return sp
@@ -31,8 +35,66 @@ jmp start
 	push 8
 	callword(multiply)
 	pop a
+	mov b,a
+	mov c,a
+
+	push test1
+	callword(strtoint)
+	mov a,0
+	mov a,0
+	mov a,0
+	mov a,0
+	mov a,0
+	mov a,0
+	mov a,0
+	mov a,0
+	mov a,0
+	pop a
+	mov b,a
+	mov c,a
 
 	jmp exit
+
+defword(parse, 0, parse)
+	jmp parse_begin
+
+	:string_to_parse
+		dat 0
+	:current_word
+		dat 0
+	:memory
+		dat 0x00					; buffer
+	:parse_begin
+		mov [string_to_parse], pop
+		mov i, 0
+		mov [memory], 0x1800		; buffer
+
+		mov x, [string_to_parse]
+		mov a, [current_word]
+
+		:parse_add_symbol
+			mov	[a], [x]
+			add x, 1
+			add a, 1
+			ifn [x],0x20			; IF NOT SPACE
+			jmp parse_add_symbol
+
+			mov [a], 0
+			push [current_word]
+			callword(isnumber)
+			ife	1, pop				; that's NUMBER
+			jmp parse_num
+
+			push [current_word]
+			callword(strlen)
+			mov j,pop
+			mov c,i
+			
+		:parse_num
+			push [current_word]			
+
+
+next
 
 defword(searchForWord, 0, searchForWord) ; ( n -- addr ) searches word in dictionary by name 
 	mov [sfw_local_name_str], pop
@@ -150,7 +212,7 @@ defword(strlen, 0, strlen)
 	set push, i
 next
 
-defword(inttostr, 0, inttostr)
+defword(inttostr, 0, inttostr) ; ( num str -- str )
 	mov a, pop
 	mov b, pop
 	mov z, b
@@ -177,6 +239,76 @@ defword(inttostr, 0, inttostr)
 		ifg y, 1
 		jmp __next_digit
 	set push, z
+next
+
+defword(strtoint, 0, strtoint) ; ( num str -- str )
+	jmp strtoint_start
+		:strtoint_string
+			dat 0
+		:strtoint_digit
+			dat 0
+		:strtoint_result
+			dat 0
+
+	:strtoint_start
+		mov [strtoint_string], pop
+		mov [strtoint_digit], pop
+
+		push [strtoint_string]
+		callword(strlen)
+		mov z, pop
+		sub z, 1
+
+
+		mov a, [strtoint_string]
+		add a, z
+		mov b, [a]
+		sub b, 0x30
+		mov [strtoint_result], b
+
+		mov y, 1
+	:strtoint_next_digit	
+		mul y, 10
+		sub z, 1
+		ife z, 0xffff
+		jmp strtoint_finished
+
+		mov a, [strtoint_string]
+		add a, z
+		mov b, [a]
+		sub b, 0x30
+		mul b, y
+		add [strtoint_result], b
+		jmp strtoint_next_digit
+
+	:strtoint_finished
+		push [strtoint_result]
+next
+
+
+
+defword(isnumber, 0, isnumber)
+	mov a, pop
+	mov i, 0
+
+	:isnumber_mainloop
+		ife [a], 0
+		jmp isnumber_success
+
+		ifg 0x30, [a]
+		jmp isnumber_fail
+		ifg [a], 0x39
+		jmp isnumber_fail
+		add a, 1
+		jmp isnumber_mainloop
+
+	:isnumber_fail
+		push 0xffff
+		jmp isnumber_finish
+
+	:isnumber_success
+		push 1
+	:isnumber_finish	
 next
 
 defword(upstr, 0, upstr)
