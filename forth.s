@@ -17,8 +17,7 @@ jmp start
 		dat "Ok",0
 
 :start
-	mov	initial_stack, sp 	; saving initial stack pointer if we should inline into other program (OS)
-	mov [return_stack_top], 0x3000
+	mov [return_stack_top], 0x3000 ; init return sp
 
 	set push, result
 	set push, 12345
@@ -40,7 +39,6 @@ defword(rot, 0, rot)
 	set push, b
 	set push, a
 	set push, c
-	callword(dup)
 next
 
 defword(strcmp, 0, strcmp)
