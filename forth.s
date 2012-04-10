@@ -23,7 +23,7 @@ jmp start
 	:ok_msg
 		dat "Ok",0
 	:program
-		dat "256 128 256 + +",0
+		dat "256 128 dup",0
 	:test1
 		dat "65534",0
 
@@ -93,12 +93,31 @@ defword(parse, 0, parse)
 			;callword(strlen)
 			;mov j, pop
 			;mov c,i
+		:parse_word
+			mov j, 0xdead
+			mov a, [current_word]
+			mov b, [a]
+			push b
+			callword(searchForWord)
+			mov j, 0xf00d
+			pop a
+			call(a)
+			pop b
+			mov b,b
+			mov b,b
+			mov b,b
+			mov b,b
+			mov b,b
+			mov b,b
+			mov b,b
+			mov b,b
 			
 		:parse_num
 			mov a, [current_word]
 			push [current_word]
 			callword(strtoint)		; digit is on stack
 			pop j
+			push j
 			jmp parse_next_token
 
 		:parse_exit
