@@ -23,7 +23,7 @@ jmp start
 	:ok_msg
 		dat "Ok",0
 	:program
-		dat "256 128 64 + +",0
+		dat "256 128 256 + +",0
 	:test1
 		dat "65534",0
 
@@ -68,8 +68,7 @@ defword(parse, 0, parse)
 			mov a, [current_word]
 
 			mov x, [string_to_parse]
-			mov b, [current_pos]
-			add x, [b]
+			mov x, [current_pos]
 
 		:parse_add_symbol
 			mov	[a], [x]
@@ -77,10 +76,6 @@ defword(parse, 0, parse)
 			add a, 1
 
 			ife [x],0				; TEH END
-			jmp parse_exit
-			ife [x],0x0A
-			jmp parse_exit
-			ife [x],0x0D
 			jmp parse_exit
 
 			ifn [x],0x20			; IF NOT SPACE
