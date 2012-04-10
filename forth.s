@@ -11,7 +11,7 @@ jmp start
 	:cmd1
 		dat "rot",0
 	:cmd2
-		dat "strlen",0
+		dat "*",0
 
 ; data section here
 	:initial_stack 			
@@ -23,23 +23,27 @@ jmp start
 	:ok_msg
 		dat "Ok",0
 	:program
-		dat "256 128 dup",0
+		dat "256 128 + ",0
 	:test1
 		dat "65534",0
 
 :start
 	mov [return_stack_top], 0x3000 ; init return sp
-	mov [dictionary_end], upstr ; last word on boot
+	mov [dictionary_end], multiply ; last word on boot
 
 	push 8
 	push 8
-	callword(multiply)
+;	callword(multiply)
+	push cmd2
+	callword(searchForWord)
 	pop a
-	mov b,a
-	mov c,a
+	mov b, multiply
+	call(a)
+	pop a
 
-	push program
-	callword(parse)
+	; push program
+	; callword(parse)
+
 
 	jmp exit
 
@@ -89,19 +93,15 @@ defword(parse, 0, parse)
 			ife	1, pop				; that's NUMBER
 			jmp parse_num
 
-			;push [current_word]
-			;callword(strlen)
-			;mov j, pop
-			;mov c,i
 		:parse_word
 			mov j, 0xdead
 			mov a, [current_word]
-			mov b, [a]
-			push b
+			push cmd1
 			callword(searchForWord)
-			mov j, 0xf00d
 			pop a
-			call(a)
+			mov j, 0xf00d
+			mov b, rot
+			;call(a)
 			pop b
 			mov b,b
 			mov b,b
@@ -111,6 +111,7 @@ defword(parse, 0, parse)
 			mov b,b
 			mov b,b
 			mov b,b
+			jmp parse_next_token
 			
 		:parse_num
 			mov a, [current_word]
