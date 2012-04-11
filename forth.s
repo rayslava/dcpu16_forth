@@ -15,7 +15,7 @@ jmp start
 		dat return_stack_top
 
 	:cmd1
-		dat "rot",0
+		dat "SWap",0
 	:cmd2
 		dat "+",0
 
@@ -29,30 +29,22 @@ jmp start
 	:ok_msg
 		dat "Ok",0
 	:program
-		dat "32 32 + 16 + ",0
+		dat "2 4 swap / ",0
 	:test1
 		dat "65534",0
 
 :start
 	mov [return_stack_top], 0xb000 ; init return sp
-	mov [dictionary_end], divide ; last word on boot
+	mov [dictionary_end], [last_word] ; last word on boot
 
-	push cmd2
-			callword(searchForWord)
-			mov j, 0x7001
-			mov a, pop
-			mov b, plus
-
-	push program
-	callword(parse)
+	push cmd1
+	callword(searchForWord)
 	pop a
-	mov c,c
-	mov c,c
-	mov c,c
-	mov c,c
-	mov c,c
-	mov c,c
-	mov c,c
+	mov b, swap
+
+;	push program
+;	callword(parse)
+;	pop a
 
 	jmp exit
 
@@ -116,9 +108,35 @@ defword(parse, 0, parse)
 
 		:parse_word
 
+			mov j, 0xdead
+			mov a, [current_word]
+			mov b, [a]
+			add a, 1
+			mov c, [a]
+			add a, 1
+			mov x, [a]
+			add a, 1
+			mov y, [a]
+			add a, 1
+			mov z, [a]
+			add a, 1
+
 			push [current_word]
 			callword(searchForWord)
 			mov a, pop
+			mov i, swap
+			mov j, a
+			mov c,c
+			mov c,c
+			mov c,c
+			mov c,c
+			mov c,c
+			mov c,c
+			mov c,c
+			mov c,c
+			mov c,c
+			mov c,c
+			mov c,c
 			call(a)
 			jmp parse_next_token
 			;mov c,i
@@ -141,12 +159,12 @@ defword(searchForWord, 0, searchForWord) ; ( n -- addr ) searches word in dictio
 	:sfw_local_current_addr
 		dat 0,0,0,0
 	:sfw_local_name_str
-		dat 0,0,0,0
+		dat 0,0,0,0,0,0,0,0,0,0
 	:sfw_local_name_len
 		dat 0,0,0,0
 	
 	:sfw_begin
-		mov [dictionary_end], divide
+		mov [dictionary_end], [last_word]
 		mov [sfw_local_current_addr], [dictionary_end]
 		mov j, [dictionary_end]
 
@@ -400,6 +418,15 @@ defword(/, 0, divide)
 	push a
 next
 
+defword(swap, 0, swap)
+	pop b
+	pop a
+	push b
+	push a
+next
+
+
+:last_word
+	dat prev_word
 
 :exit
-	dat 0x0000
