@@ -2,16 +2,22 @@ jmp start
 
 ; some kind of configuration
 	:dictionary_end		
-		dat 0,0,0,0
+		dat 0
+		dat 0
+		dat 0
+		dat 0
 	:return_stack_top		
-		dat 0,0,0,0
+		dat 0
+		dat 0
+		dat 0
+		dat 0
 	:return
 		dat return_stack_top
 
 	:cmd1
 		dat "rot",0
 	:cmd2
-		dat "strlen",0
+		dat "+",0
 
 ; data section here
 	:initial_stack 			
@@ -23,23 +29,30 @@ jmp start
 	:ok_msg
 		dat "Ok",0
 	:program
-		dat "256 128 256 + +",0
+		dat "32 32 + 16 + ",0
 	:test1
 		dat "65534",0
 
 :start
-	mov [return_stack_top], 0x3000 ; init return sp
-	mov [dictionary_end], upstr ; last word on boot
+	mov [return_stack_top], 0xb000 ; init return sp
+	mov [dictionary_end], divide ; last word on boot
 
-	push 8
-	push 8
-	callword(multiply)
-	pop a
-	mov b,a
-	mov c,a
+	push cmd2
+			callword(searchForWord)
+			mov j, 0x7001
+			mov a, pop
+			mov b, plus
 
 	push program
 	callword(parse)
+	pop a
+	mov c,c
+	mov c,c
+	mov c,c
+	mov c,c
+	mov c,c
+	mov c,c
+	mov c,c
 
 	jmp exit
 
@@ -48,11 +61,23 @@ defword(parse, 0, parse)
 
 	:string_to_parse
 		dat 0
+		dat 0
+		dat 0
+		dat 0
 	:current_pos
+		dat 0
+		dat 0
+		dat 0
 		dat 0
 	:current_word
 		dat 0
+		dat 0
+		dat 0
+		dat 0
 	:memory
+		dat 0x00					; buffer
+		dat 0x00					; buffer
+		dat 0x00					; buffer
 		dat 0x00					; buffer
 	:parse_begin
 		mov [string_to_parse], pop
@@ -89,9 +114,13 @@ defword(parse, 0, parse)
 			ife	1, pop				; that's NUMBER
 			jmp parse_num
 
-			;push [current_word]
-			;callword(strlen)
-			;mov j, pop
+		:parse_word
+
+			push [current_word]
+			callword(searchForWord)
+			mov a, pop
+			call(a)
+			jmp parse_next_token
 			;mov c,i
 			
 		:parse_num
@@ -99,6 +128,7 @@ defword(parse, 0, parse)
 			push [current_word]
 			callword(strtoint)		; digit is on stack
 			pop j
+			push j
 			jmp parse_next_token
 
 		:parse_exit
@@ -116,7 +146,9 @@ defword(searchForWord, 0, searchForWord) ; ( n -- addr ) searches word in dictio
 		dat 0,0,0,0
 	
 	:sfw_begin
+		mov [dictionary_end], divide
 		mov [sfw_local_current_addr], [dictionary_end]
+		mov j, [dictionary_end]
 
 		mov push, [sfw_local_name_str]
 		callword(upstr)
