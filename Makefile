@@ -1,8 +1,8 @@
-SRC=forth.s
+SRC=forth.dasm16
 all: macro
 	../dcpu16/a16 processed.s
 #	rm processed.s
-	rm macro.m4
+#	rm macro.m4
 run: all
 	../dcpu16/dcpu
 macro:
