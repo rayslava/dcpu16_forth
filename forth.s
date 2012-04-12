@@ -15,7 +15,7 @@ jmp start
 		dat return_stack_top
 
 	:cmd1
-		dat "SWap",0
+		dat "SW",0
 	:cmd2
 		dat "+",0
 
@@ -29,22 +29,18 @@ jmp start
 	:ok_msg
 		dat "Ok",0
 	:program
-		dat "2 4 swap / ",0
+		dat "4 dup * 64 swap / ",0
 	:test1
 		dat "65534",0
 
 :start
 	mov [return_stack_top], 0xb000 ; init return sp
+	mov [current_word],		0x9000 ; init memory buffer for string placement
 	mov [dictionary_end], [last_word] ; last word on boot
 
-	push cmd1
-	callword(searchForWord)
+	push program
+	callword(parse)
 	pop a
-	mov b, swap
-
-;	push program
-;	callword(parse)
-;	pop a
 
 	jmp exit
 
@@ -52,25 +48,13 @@ defword(parse, 0, parse)
 	jmp parse_begin
 
 	:string_to_parse
-		dat 0
-		dat 0
-		dat 0
-		dat 0
+		dat 0,0,0,0
 	:current_pos
-		dat 0
-		dat 0
-		dat 0
-		dat 0
+		dat 0,0,0,0
 	:current_word
-		dat 0
-		dat 0
-		dat 0
-		dat 0
+		dat 0,0,0,0
 	:memory
-		dat 0x00					; buffer
-		dat 0x00					; buffer
-		dat 0x00					; buffer
-		dat 0x00					; buffer
+		dat 0,0,0,0					; buffer
 	:parse_begin
 		mov [string_to_parse], pop
 		mov i, 0
@@ -108,38 +92,11 @@ defword(parse, 0, parse)
 
 		:parse_word
 
-			mov j, 0xdead
-			mov a, [current_word]
-			mov b, [a]
-			add a, 1
-			mov c, [a]
-			add a, 1
-			mov x, [a]
-			add a, 1
-			mov y, [a]
-			add a, 1
-			mov z, [a]
-			add a, 1
-
 			push [current_word]
 			callword(searchForWord)
 			mov a, pop
-			mov i, swap
-			mov j, a
-			mov c,c
-			mov c,c
-			mov c,c
-			mov c,c
-			mov c,c
-			mov c,c
-			mov c,c
-			mov c,c
-			mov c,c
-			mov c,c
-			mov c,c
 			call(a)
 			jmp parse_next_token
-			;mov c,i
 			
 		:parse_num
 			mov a, [current_word]
@@ -153,7 +110,6 @@ defword(parse, 0, parse)
 next
 
 defword(searchForWord, 0, searchForWord) ; ( n -- addr ) searches word in dictionary by name 
-	mov [sfw_local_name_str], pop
 	jmp sfw_begin
 
 	:sfw_local_current_addr
@@ -164,14 +120,37 @@ defword(searchForWord, 0, searchForWord) ; ( n -- addr ) searches word in dictio
 		dat 0,0,0,0
 	
 	:sfw_begin
+		mov j, 0xf000
 		mov [dictionary_end], [last_word]
 		mov [sfw_local_current_addr], [dictionary_end]
-		mov j, [dictionary_end]
+
+		mov a, pop
+		mov [sfw_local_name_str], a
+		mov a,[sfw_local_name_str]
+		mov b, [a]
+		add a, 1
+		mov c, [a]
+		add a, 1
+		mov x, [a]
+		add a, 1
+		mov y, [a]
+		add a, 1
+
+		mov push, [sfw_local_name_str]
+		callword(strlen)
+		mov [sfw_local_name_len], pop					; name_length
 
 		mov push, [sfw_local_name_str]
 		callword(upstr)
-		callword(strlen)
-		mov [sfw_local_name_len], pop					; name_length
+		pop a
+		mov i,i
+		mov i,i
+		mov i,i
+		mov i,i
+		mov i,i
+		mov i,i
+		mov i,i
+		mov i,i
 		
 		:sfw_mainloop
 			mov b, [sfw_local_current_addr]
@@ -181,6 +160,16 @@ defword(searchForWord, 0, searchForWord) ; ( n -- addr ) searches word in dictio
 			callword(strlen)
 			mov a, pop
 
+			mov z, [sfw_local_name_len]
+			mov z,z
+			mov z,z
+			mov z,z
+			mov z,z
+			mov z,z
+			mov z,z
+			mov z,z
+			mov z,z
+			mov z,z
 			ifn [sfw_local_name_len], a
 			jmp nextword
 			push [sfw_local_name_str]
