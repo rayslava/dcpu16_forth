@@ -7,6 +7,8 @@ jmp start
 		dat 0x0000
 	:return
 		dat return_stack_top
+	:screen
+		dat 0x8000
 
 ; data section here
 	:initial_stack 			
@@ -18,7 +20,7 @@ jmp start
 	:ok_msg
 		dat "Ok",0
 	:program
-		dat "8 dup * 256 swap /",0x20,0
+		dat "8 dup * 256 swap / 1 1 7 print",0x20,0
 	:test1
 		dat "65534",0
 
@@ -45,7 +47,7 @@ defword(parse, 0, parse)
 	:memory
 		dat 0x0000		; buffer
 	:parse_begin
-		mov [string_to_parse], pop
+		pop [string_to_parse]
 		mov [memory], 0x1800		; buffer
 
 		
@@ -368,6 +370,29 @@ defword(swap, 0, swap)
 	push a
 next
 
+defword(print, 0, print)
+	set a, 0
+	set b, 0x8000
+	hwi 0
+	pop z
+	pop y
+	pop x
+    mul y, 32
+    add x, y
+    add x, 0x8000   ;0x800 is start of video RAM
+:print_ploop
+    ife [z], 0              ;end of string?
+    set PC, print_finish    ;then return
+	set [x], 0x2			; Green
+	shl [x], 0x4
+	bor [x], 0x8			; Gray
+	shl [x], 0x8
+	bor [x], [z]
+    add z, 1
+    add x, 1
+    set PC, print_ploop
+:print_finish
+next
 
 :last_word
 	dat prev_word
