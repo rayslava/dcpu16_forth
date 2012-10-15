@@ -5,8 +5,6 @@ all: macro
 	sed -e "s/^\s\?\+push\s\+\(.\+\)/SET PUSH, \1/"  <p.s >processed.s 
 	rm p.s
 	../dcpu16/a16 -o ../dcpu/test.img -O binary processed.s
-#	rm processed.s
-#	rm macro.m4
 run: all
 	../dcpu16/dcpu
 macro:
